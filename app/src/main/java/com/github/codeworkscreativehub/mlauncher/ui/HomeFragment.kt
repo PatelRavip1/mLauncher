@@ -292,8 +292,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             yearProgressPercent.setTextColor(prefs.dateColor)
             yearProgressBar.setIndicatorColor(prefs.dateColor)
             yearProgressBar.trackColor = trackColor
-            dayProgressLabel.setTextColor(prefs.dateColor)
-            dayProgressPercent.setTextColor(prefs.dateColor)
             dayProgressBar.setIndicatorColor(prefs.dateColor)
             dayProgressBar.trackColor = trackColor
             progressBarsLayout.isVisible = prefs.showYearDayProgress
@@ -362,6 +360,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
             // Year & day progress
             val now = Calendar.getInstance()
+            yearProgressLabel.text = now.get(Calendar.YEAR).toString()
             val dayOfYear = now.get(Calendar.DAY_OF_YEAR)
             val totalDaysInYear = now.getActualMaximum(Calendar.DAY_OF_YEAR)
             val yearPercent = (dayOfYear * 100) / totalDaysInYear
@@ -373,7 +372,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 now.get(Calendar.SECOND)
             val dayPercent = (elapsedSecondsToday * 100) / 86400
             dayProgressBar.progress = dayPercent
-            dayProgressPercent.text = "$dayPercent%"
         }
     }
 

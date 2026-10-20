@@ -241,8 +241,10 @@ object FuzzyFinder {
 
             if (prefs.enableFilterStrength) {
                 val score = scoreProvider(item, query)
+                val isPrefixMatch = startsWith || wordStartsWith
                 val blockedByStartSetting = prefs.searchFromStart && !startsWith
-                if (score <= prefs.filterStrength || blockedByStartSetting) {
+                val droppedByFilterStrength = !isPrefixMatch && score <= prefs.filterStrength
+                if (blockedByStartSetting || droppedByFilterStrength) {
                     null
                 } else {
                     RankedItem(item, score, startIndex, startsWith, wordStartsWith, index)

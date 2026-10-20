@@ -90,6 +90,15 @@
                     android:layout_marginBottom="4dp"
                     android:orientation="vertical">
 
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/dayProgressBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="8dp"
+                        app:trackThickness="5dp"
+                        app:trackCornerRadius="3dp" />
+
                     <!-- Year in Progress -->
                     <LinearLayout
                         android:id="@+id/yearProgressHeader"
@@ -103,7 +112,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="YEAR IN PROGRESS"
+                            android:text="2026"
                             android:textSize="12sp" />
 
                         <com.github.creativecodecat.components.views.FontAppCompatTextView
@@ -117,40 +126,6 @@
 
                     <com.google.android.material.progressindicator.LinearProgressIndicator
                         android:id="@+id/yearProgressBar"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:layout_marginBottom="8dp"
-                        app:trackThickness="5dp"
-                        app:trackCornerRadius="3dp" />
-
-                    <!-- Day in Progress -->
-                    <LinearLayout
-                        android:id="@+id/dayProgressHeader"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.github.creativecodecat.components.views.FontAppCompatTextView
-                            android:id="@+id/dayProgressLabel"
-                            style="@style/TextDefaultStyle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="DAY IN PROGRESS"
-                            android:textSize="12sp" />
-
-                        <com.github.creativecodecat.components.views.FontAppCompatTextView
-                            android:id="@+id/dayProgressPercent"
-                            style="@style/TextDefaultStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="12sp"
-                            tools:text="68%" />
-                    </LinearLayout>
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/dayProgressBar"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
