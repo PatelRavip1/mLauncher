@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
@@ -80,6 +81,82 @@
                     android:layout_marginHorizontal="2dp"
                     android:textSize="@dimen/date_size"
                     tools:text="Thu, 30 Dec" />
+
+                <LinearLayout
+                    android:id="@+id/progressBarsLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="4dp"
+                    android:orientation="vertical">
+
+                    <!-- Year in Progress -->
+                    <LinearLayout
+                        android:id="@+id/yearProgressHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.github.creativecodecat.components.views.FontAppCompatTextView
+                            android:id="@+id/yearProgressLabel"
+                            style="@style/TextDefaultStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="YEAR IN PROGRESS"
+                            android:textSize="12sp" />
+
+                        <com.github.creativecodecat.components.views.FontAppCompatTextView
+                            android:id="@+id/yearProgressPercent"
+                            style="@style/TextDefaultStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="12sp"
+                            tools:text="72%" />
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/yearProgressBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="8dp"
+                        app:trackThickness="5dp"
+                        app:trackCornerRadius="3dp" />
+
+                    <!-- Day in Progress -->
+                    <LinearLayout
+                        android:id="@+id/dayProgressHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.github.creativecodecat.components.views.FontAppCompatTextView
+                            android:id="@+id/dayProgressLabel"
+                            style="@style/TextDefaultStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="DAY IN PROGRESS"
+                            android:textSize="12sp" />
+
+                        <com.github.creativecodecat.components.views.FontAppCompatTextView
+                            android:id="@+id/dayProgressPercent"
+                            style="@style/TextDefaultStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="12sp"
+                            tools:text="68%" />
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/dayProgressBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        app:trackThickness="5dp"
+                        app:trackCornerRadius="3dp" />
+                </LinearLayout>
 
                 <com.github.creativecodecat.components.views.FontAppCompatTextView
                     android:id="@+id/alarm"

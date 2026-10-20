@@ -216,6 +216,7 @@ class SettingsFragment : BaseFragment() {
 
         var toggledShowDate by remember { mutableStateOf(prefs.showDate) }
         var toggledShowDayOfYear by remember { mutableStateOf(prefs.showDayOfYear) }
+        var toggledShowYearDayProgress by remember { mutableStateOf(prefs.showYearDayProgress) }
         var toggledShowClock by remember { mutableStateOf(prefs.showClock) }
         var toggledShowClockFormat by remember { mutableStateOf(prefs.showClockFormat) }
         var toggledShowAlarm by remember { mutableStateOf(prefs.showAlarm) }
@@ -1069,6 +1070,17 @@ class SettingsFragment : BaseFragment() {
                             toggledShowDayOfYear = !prefs.showDayOfYear
                             prefs.showDayOfYear = toggledShowDayOfYear
                             viewModel.setShowDayOfYear(prefs.showDayOfYear)
+                        }
+                    )
+
+                    SettingsSwitch(
+                        text = getLocalizedString(R.string.show_year_day_progress),
+                        fontSize = titleFontSize,
+                        defaultState = toggledShowYearDayProgress,
+                        onCheckedChange = {
+                            toggledShowYearDayProgress = !prefs.showYearDayProgress
+                            prefs.showYearDayProgress = toggledShowYearDayProgress
+                            viewModel.setShowYearDayProgress(prefs.showYearDayProgress)
                         }
                     )
 

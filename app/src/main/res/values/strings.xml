@@ -103,6 +103,7 @@
     <string name="show_clock_format">Show Format (AM/PM)</string>
     <string name="show_date">Show Date</string>
     <string name="show_day_of_year">Show Day Of Year</string>
+    <string name="show_year_day_progress">Show year &amp; day progress</string>
     <string name="show_alarm">Show Alarm</string>
     <string name="show_alarm_date">Show Alarm Date</string>
     <string name="alarm_settings">Alarm</string>

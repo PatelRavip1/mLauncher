@@ -1,10 +1,12 @@
 package com.github.codeworkscreativehub.mlauncher.ui
 
+import android.content.BroadcastReceiver
 import android.annotation.SuppressLint
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Context.VIBRATOR_SERVICE
+import androidx.core.graphics.ColorUtils
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.PorterDuff
@@ -105,6 +107,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private lateinit var weatherHelper: WeatherHelper
     private lateinit var privateSpaceReceiver: PrivateSpaceReceiver
     private lateinit var vibrator: Vibrator
+    private var timeTickReceiver: BroadcastReceiver? = null
 
     private var longPressToSelectApp: Int = 0
     private var _binding: FragmentHomeBinding? = null
@@ -170,6 +173,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     override fun onStart() {
         super.onStart()
+        updateUIFromPreferences()
 
         // Handle status bar once per view creation
         setTopPadding(binding.mainLayout)
@@ -210,6 +214,13 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 privateSpaceReceiver = PrivateSpaceReceiver()
                 ctx.registerReceiver(privateSpaceReceiver, IntentFilter(Intent.ACTION_PROFILE_AVAILABLE))
             }
+
+            timeTickReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    updateTimeAndInfo()
+                }
+            }
+            ctx.registerReceiver(timeTickReceiver, IntentFilter(Intent.ACTION_TIME_TICK))
         }
     }
 
@@ -222,6 +233,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 if (PrivateSpaceManager(requireContext()).isPrivateSpaceSupported()) {
                     privateSpaceReceiver.let { ctx.unregisterReceiver(it) }
                 }
+                timeTickReceiver?.let { ctx.unregisterReceiver(it) }
+                timeTickReceiver = null
             } catch (e: IllegalArgumentException) {
                 // Receiver not registered — safe to ignore
                 e.printStackTrace()
@@ -274,6 +287,16 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             battery.setTextColor(prefs.batteryColor)
             totalScreenTime.setTextColor(prefs.appColor)
             setDefaultLauncher.setTextColor(prefs.appColor)
+            val trackColor = ColorUtils.setAlphaComponent(prefs.dateColor, 51) // ~20% alpha
+            yearProgressLabel.setTextColor(prefs.dateColor)
+            yearProgressPercent.setTextColor(prefs.dateColor)
+            yearProgressBar.setIndicatorColor(prefs.dateColor)
+            yearProgressBar.trackColor = trackColor
+            dayProgressLabel.setTextColor(prefs.dateColor)
+            dayProgressPercent.setTextColor(prefs.dateColor)
+            dayProgressBar.setIndicatorColor(prefs.dateColor)
+            dayProgressBar.trackColor = trackColor
+            progressBarsLayout.isVisible = prefs.showYearDayProgress
 
             val fabList = listOf(fabPhone, fabMessages, fabCamera, fabPhotos, fabBrowser, fabSettings, fabAction)
             val fabFlags = prefs.getMenuFlags("HOME_BUTTON_FLAGS", "0000011") // Might return list of wrong size
@@ -336,6 +359,21 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
             alarm.text = getNextAlarm(requireContext(), prefs, viewModel.showAlarmDate.value ?: true)
             dailyWord.text = wordOfTheDay(prefs)
+
+            // Year & day progress
+            val now = Calendar.getInstance()
+            val dayOfYear = now.get(Calendar.DAY_OF_YEAR)
+            val totalDaysInYear = now.getActualMaximum(Calendar.DAY_OF_YEAR)
+            val yearPercent = (dayOfYear * 100) / totalDaysInYear
+            yearProgressBar.progress = yearPercent
+            yearProgressPercent.text = "$yearPercent%"
+
+            val elapsedSecondsToday = now.get(Calendar.HOUR_OF_DAY) * 3600 +
+                now.get(Calendar.MINUTE) * 60 +
+                now.get(Calendar.SECOND)
+            val dayPercent = (elapsedSecondsToday * 100) / 86400
+            dayProgressBar.progress = dayPercent
+            dayProgressPercent.text = "$dayPercent%"
         }
     }
 
@@ -523,6 +561,9 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             }
             showDayOfYear.observe(viewLifecycleOwner) {
                 updateTimeAndInfo()
+            }
+            showYearDayProgress.observe(viewLifecycleOwner) {
+                binding.progressBarsLayout.isVisible = it
             }
             showClock.observe(viewLifecycleOwner) {
                 binding.clock.isVisible = it
