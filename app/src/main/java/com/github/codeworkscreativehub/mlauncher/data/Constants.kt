@@ -490,6 +490,7 @@ object Constants {
         Doto,
         FiraCode,
         Hack,
+        JetBrainsMono,
         Lato,
         Merriweather,
         Montserrat,
@@ -505,6 +506,7 @@ object Constants {
                 Doto -> ResourcesCompat.getFont(context, R.font.doto)
                 FiraCode -> ResourcesCompat.getFont(context, R.font.fira_code)
                 Hack -> ResourcesCompat.getFont(context, R.font.hack)
+                JetBrainsMono -> ResourcesCompat.getFont(context, R.font.jetbrains_mono)
                 Lato -> ResourcesCompat.getFont(context, R.font.lato)
                 Merriweather -> ResourcesCompat.getFont(context, R.font.merriweather)
                 Montserrat -> ResourcesCompat.getFont(context, R.font.montserrat)
@@ -533,6 +535,7 @@ object Constants {
                 Doto -> getLocalizedString(R.string.settings_font_doto)
                 FiraCode -> getLocalizedString(R.string.settings_font_firacode)
                 Hack -> getLocalizedString(R.string.settings_font_hack)
+                JetBrainsMono -> getLocalizedString(R.string.settings_font_jetbrainsmono)
                 Lato -> getLocalizedString(R.string.settings_font_lato)
                 Merriweather -> getLocalizedString(R.string.settings_font_merriweather)
                 Montserrat -> getLocalizedString(R.string.settings_font_montserrat)
@@ -552,6 +555,7 @@ object Constants {
                 Doto -> getLocalizedString(R.string.settings_font_doto)
                 FiraCode -> getLocalizedString(R.string.settings_font_firacode)
                 Hack -> getLocalizedString(R.string.settings_font_hack)
+                JetBrainsMono -> getLocalizedString(R.string.settings_font_jetbrainsmono)
                 Lato -> getLocalizedString(R.string.settings_font_lato)
                 Merriweather -> getLocalizedString(R.string.settings_font_merriweather)
                 Montserrat -> getLocalizedString(R.string.settings_font_montserrat)

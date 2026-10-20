@@ -21,6 +21,7 @@
     <string name="settings_font_doto" translatable="false">Doto</string>
     <string name="settings_font_firacode" translatable="false">Fira Code</string>
     <string name="settings_font_hack" translatable="false">Hack</string>
+    <string name="settings_font_jetbrainsmono" translatable="false">JetBrains Mono NL Nerd Font</string>
     <string name="settings_font_lato" translatable="false">Lato</string>
     <string name="settings_font_merriweather" translatable="false">Merriweather</string>
     <string name="settings_font_montserrat" translatable="false">Montserrat</string>
