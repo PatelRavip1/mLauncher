@@ -41,6 +41,9 @@ object FontManager {
     }
 
     fun register(view: CustomFontView) {
+        if (registeredViews.size > 30) {
+            registeredViews.removeAll { it.get() == null }
+        }
         registeredViews.add(WeakReference(view))
         view.applyFont(cachedTypeface)
     }

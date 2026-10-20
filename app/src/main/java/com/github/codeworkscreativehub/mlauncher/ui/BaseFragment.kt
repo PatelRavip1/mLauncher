@@ -12,6 +12,10 @@ import com.github.codeworkscreativehub.mlauncher.helper.utils.SystemBarObserver
 
 open class BaseFragment : Fragment() {
 
+    companion object {
+        private var lastAppliedWallpaperColor: Int? = null
+    }
+
     private val prefs: Prefs by lazy { Prefs(requireContext()) }
 
     private val systemBarObserver: SystemBarObserver by lazy { SystemBarObserver(prefs) }
@@ -34,7 +38,7 @@ open class BaseFragment : Fragment() {
     override fun onStart() {
         super.onStart()
 
-        if (prefs.forceWallpaper) {
+        if (prefs.forceWallpaper && prefs.backgroundColor != lastAppliedWallpaperColor) {
             val context = requireContext()
             val wallpaperManager = WallpaperManager.getInstance(context)
             val backgroundColor = prefs.backgroundColor
@@ -60,7 +64,8 @@ open class BaseFragment : Fragment() {
                 true,
                 WallpaperManager.FLAG_LOCK
             )
+
+            lastAppliedWallpaperColor = backgroundColor
         }
     }
 }
-

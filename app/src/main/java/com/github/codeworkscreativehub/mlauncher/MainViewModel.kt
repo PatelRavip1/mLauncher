@@ -408,10 +408,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         appsMemoryCache?.let {
             appList.postValue(it)
         } ?: run {
-            // try file cache
-            loadAppsFromFileCache()?.let { cached ->
-                appsMemoryCache = cached.toMutableList()
-                appList.postValue(cached)
+            // try file cache asynchronously on IO
+            viewModelScope.launch(Dispatchers.IO) {
+                loadAppsFromFileCache()?.let { cached ->
+                    if (appsMemoryCache == null) {
+                        appsMemoryCache = cached.toMutableList()
+                        appList.postValue(cached)
+                    }
+                }
             }
         }
 

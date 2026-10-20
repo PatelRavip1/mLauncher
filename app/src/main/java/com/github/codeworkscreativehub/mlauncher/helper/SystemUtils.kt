@@ -1143,12 +1143,13 @@ fun updateWordWidget(context: Context) {
     val appWidgetManager = AppWidgetManager.getInstance(context)
     val componentName = ComponentName(context, WordOfTheDayWidget::class.java)
     val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-
-    val intent = Intent(context, WordOfTheDayWidget::class.java).apply {
-        action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-        putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+    if (appWidgetIds.isNotEmpty()) {
+        val intent = Intent(context, WordOfTheDayWidget::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+        }
+        context.sendBroadcast(intent)
     }
-    context.sendBroadcast(intent)
 }
 
 fun updateFabWidget(context: Context) {
@@ -1158,13 +1159,14 @@ fun updateFabWidget(context: Context) {
         HomeAppsWidgetProvider::class.java
     ) // Replace with your FAB widget class
     val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+    if (appWidgetIds.isNotEmpty()) {
+        val intent = Intent(context, HomeAppsWidgetProvider::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+        }
 
-    val intent = Intent(context, HomeAppsWidgetProvider::class.java).apply {
-        action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-        putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+        context.sendBroadcast(intent)
     }
-
-    context.sendBroadcast(intent)
 }
 
 

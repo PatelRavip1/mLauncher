@@ -353,8 +353,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             date.format24Hour = finalPattern
 
 
-            alarm.text = getNextAlarm(requireContext(), prefs, viewModel.showAlarmDate.value ?: true)
-            dailyWord.text = wordOfTheDay(prefs)
+            alarm.text = if (prefs.showAlarm) getNextAlarm(requireContext(), prefs, viewModel.showAlarmDate.value ?: true) else ""
+            dailyWord.text = if (prefs.showDailyWord) wordOfTheDay(prefs) else ""
 
             // Year & day progress
             val now = Calendar.getInstance()
