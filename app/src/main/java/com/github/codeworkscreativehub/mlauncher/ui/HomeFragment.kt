@@ -287,13 +287,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             battery.setTextColor(prefs.batteryColor)
             totalScreenTime.setTextColor(prefs.appColor)
             setDefaultLauncher.setTextColor(prefs.appColor)
-            val trackColor = ColorUtils.setAlphaComponent(prefs.dateColor, 51) // ~20% alpha
+            dayProgressPercent.setTextColor(prefs.dateColor)
             yearProgressLabel.setTextColor(prefs.dateColor)
             yearProgressPercent.setTextColor(prefs.dateColor)
-            yearProgressBar.setIndicatorColor(prefs.dateColor)
-            yearProgressBar.trackColor = trackColor
-            dayProgressBar.setIndicatorColor(prefs.dateColor)
-            dayProgressBar.trackColor = trackColor
+            updateProgressDots()
             progressBarsLayout.isVisible = prefs.showYearDayProgress
 
             val fabList = listOf(fabPhone, fabMessages, fabCamera, fabPhotos, fabBrowser, fabSettings, fabAction)
@@ -362,17 +359,48 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             val now = Calendar.getInstance()
             yearProgressLabel.text = now.get(Calendar.YEAR).toString()
             val dayOfYear = now.get(Calendar.DAY_OF_YEAR)
-            val totalDaysInYear = now.getActualMaximum(Calendar.DAY_OF_YEAR)
-            val yearPercent = (dayOfYear * 100) / totalDaysInYear
-            yearProgressBar.progress = yearPercent
+            val totalDays = now.getActualMaximum(Calendar.DAY_OF_YEAR)
+            val yearPercent = (dayOfYear * 100) / totalDays
             yearProgressPercent.text = "$yearPercent%"
 
-            val elapsedSecondsToday = now.get(Calendar.HOUR_OF_DAY) * 3600 +
+            val elapsedSeconds = now.get(Calendar.HOUR_OF_DAY) * 3600 +
                 now.get(Calendar.MINUTE) * 60 +
                 now.get(Calendar.SECOND)
-            val dayPercent = (elapsedSecondsToday * 100) / 86400
-            dayProgressBar.progress = dayPercent
+            val dayPercent = (elapsedSeconds * 100) / 86400
+            dayProgressPercent.text = "$dayPercent%"
+
+            updateProgressDots(now, elapsedSeconds, dayOfYear, totalDays)
         }
+    }
+    private fun updateProgressDots(
+        now: Calendar = Calendar.getInstance(),
+        elapsedSeconds: Int = now.get(Calendar.HOUR_OF_DAY) * 3600 +
+            now.get(Calendar.MINUTE) * 60 +
+            now.get(Calendar.SECOND),
+        dayOfYear: Int = now.get(Calendar.DAY_OF_YEAR),
+        totalDays: Int = now.getActualMaximum(Calendar.DAY_OF_YEAR)
+    ) {
+        val activeColor = prefs.dateColor
+        val trackColor = ColorUtils.setAlphaComponent(prefs.dateColor, 51)
+        val dayFilledDots = (elapsedSeconds / 7200).coerceIn(0, 12)
+        val yearFilledDots = (((dayOfYear - 1) * 52) / totalDays).coerceIn(0, 52)
+
+        fun renderDots(totalDots: Int, filledCount: Int, rowLength: Int = 12): SpannableStringBuilder {
+            val ssb = SpannableStringBuilder()
+            for (i in 0 until totalDots) {
+                if (i > 0) {
+                    if (i % rowLength == 0) ssb.append('\n') else ssb.append(' ')
+                }
+                val start = ssb.length
+                ssb.append('●')
+                val color = if (i < filledCount) activeColor else trackColor
+                ssb.setSpan(ForegroundColorSpan(color), start, start + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            return ssb
+        }
+
+        binding.dayDotsView.text = renderDots(12, dayFilledDots)
+        binding.yearDotsView.text = renderDots(52, yearFilledDots)
     }
 
 
@@ -594,6 +622,16 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                     (binding.date.layoutParams as LinearLayout.LayoutParams).apply {
                         gravity = dateGravity.value()
                     }
+                binding.dayDotsView.gravity = dateGravity.value()
+                binding.yearDotsView.gravity = dateGravity.value()
+                (binding.dayDotsView.layoutParams as? LinearLayout.LayoutParams)?.let {
+                    it.gravity = dateGravity.value()
+                    binding.dayDotsView.layoutParams = it
+                }
+                (binding.yearDotsView.layoutParams as? LinearLayout.LayoutParams)?.let {
+                    it.gravity = dateGravity.value()
+                    binding.yearDotsView.layoutParams = it
+                }
             }
 
             alarmAlignment.observe(viewLifecycleOwner) { alarmGravity ->

@@ -90,14 +90,32 @@
                     android:layout_marginBottom="4dp"
                     android:orientation="vertical">
 
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/dayProgressBar"
+                    <!-- Day in Progress -->
+                    <LinearLayout
+                        android:id="@+id/dayProgressHeader"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:orientation="horizontal">
+
+                        <com.github.creativecodecat.components.views.FontAppCompatTextView
+                            android:id="@+id/dayProgressPercent"
+                            style="@style/TextDefaultStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:textSize="12sp"
+                            tools:text="75%" />
+                    </LinearLayout>
+
+                    <com.github.creativecodecat.components.views.FontAppCompatTextView
+                        android:id="@+id/dayDotsView"
+                        style="@style/TextDefaultStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:layout_marginBottom="8dp"
-                        app:trackThickness="5dp"
-                        app:trackCornerRadius="3dp" />
+                        android:textSize="12sp"
+                        tools:text="● ● ● ● ● ● ● ● ● ● ● ●" />
 
                     <!-- Year in Progress -->
                     <LinearLayout
@@ -124,13 +142,13 @@
                             tools:text="72%" />
                     </LinearLayout>
 
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/yearProgressBar"
+                    <com.github.creativecodecat.components.views.FontAppCompatTextView
+                        android:id="@+id/yearDotsView"
+                        style="@style/TextDefaultStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        app:trackThickness="5dp"
-                        app:trackCornerRadius="3dp" />
+                        android:layout_marginTop="2dp"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <com.github.creativecodecat.components.views.FontAppCompatTextView
