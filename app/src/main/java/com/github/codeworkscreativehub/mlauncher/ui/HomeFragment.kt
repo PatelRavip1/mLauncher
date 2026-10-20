@@ -169,6 +169,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
         // Update view appearance/settings based on prefs
         updateUIFromPreferences()
+        binding.yearDotsView.post { updateProgressDots() }
     }
 
     override fun onStart() {
@@ -399,8 +400,15 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             return ssb
         }
 
-        binding.dayDotsView.text = renderDots(12, dayFilledDots)
-        binding.yearDotsView.text = renderDots(52, yearFilledDots)
+        val availableWidth = binding.yearDotsView.width.takeIf { it > 0 }
+            ?: binding.progressBarsLayout.width.takeIf { it > 0 }
+            ?: (resources.displayMetrics.widthPixels - (resources.displayMetrics.density * 44).toInt())
+        val dotWidth = binding.yearDotsView.paint.measureText("●")
+        val spaceWidth = binding.yearDotsView.paint.measureText(" ")
+        val yearDotsPerRow = ((availableWidth + spaceWidth) / (dotWidth + spaceWidth)).toInt().coerceIn(12, 52)
+
+        binding.dayDotsView.text = renderDots(12, dayFilledDots, 12)
+        binding.yearDotsView.text = renderDots(52, yearFilledDots, yearDotsPerRow)
     }
 
 
