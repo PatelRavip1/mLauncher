@@ -1,15 +1,87 @@
 package com.github.codeworkscreativehub.fuzzywuzzy
 
 import android.content.Context
-import com.github.codeworkscreativehub.common.AppLogger
 import com.github.codeworkscreativehub.mlauncher.data.AppListItem
 import com.github.codeworkscreativehub.mlauncher.data.ContactListItem
 import com.github.codeworkscreativehub.mlauncher.data.Prefs
 import com.github.codeworkscreativehub.mlauncher.helper.emptyString
 import java.text.Normalizer
+import java.util.Collections
+import java.util.LinkedHashMap
 import java.util.Locale
 
+private const val SCORE_MATCH = 100
+private const val SCORE_CONSECUTIVE = 90
+private const val SCORE_WORD_START = 80
+private const val SCORE_START_IDX_BONUS = 15
+
+private val DIACRITICS_REGEX = Regex("\\p{InCombiningDiacriticalMarks}+")
+private val PUNCT_SPACE_REGEX = Regex("[-_+,. ]")
+private val PUNCT_REGEX = Regex("[-_+,.]")
+
 object FuzzyFinder {
+
+    private class TargetData(
+        val normalized: String,
+        val compact: String,
+        val lower: String
+    )
+
+    private val targetCache = Collections.synchronizedMap(
+        object : LinkedHashMap<String, TargetData>(128, 0.75f, true) {
+            override fun removeEldestEntry(eldest: Map.Entry<String, TargetData>?): Boolean = size > 512
+        }
+    )
+
+    private val searchCache = Collections.synchronizedMap(
+        object : LinkedHashMap<String, String>(64, 0.75f, true) {
+            override fun removeEldestEntry(eldest: Map.Entry<String, String>?): Boolean = size > 256
+        }
+    )
+
+    private val maxScoreCache = Collections.synchronizedMap(
+        object : LinkedHashMap<String, Int>(128, 0.75f, true) {
+            override fun removeEldestEntry(eldest: Map.Entry<String, Int>?): Boolean = size > 512
+        }
+    )
+
+    fun clearCache() {
+        targetCache.clear()
+        searchCache.clear()
+        maxScoreCache.clear()
+    }
+
+    private fun getTargetData(input: String): TargetData =
+        targetCache.getOrPut(input) {
+            val normalized = normalizeDiacritics(input.uppercase(Locale.getDefault()))
+                .replace(PUNCT_REGEX, " ")
+            val compact = normalized.replace(" ", emptyString())
+            val lower = input.lowercase(Locale.getDefault())
+            TargetData(normalized, compact, lower)
+        }
+
+    private fun isWordBoundary(c: Char): Boolean =
+        c == ' ' || c == '.' || c == '_' || c == '-' || c == ','
+
+    private fun hasWordStartingWith(target: String, query: String): Boolean {
+        if (query.isEmpty()) return true
+        if (target.startsWith(query)) return true
+        var i = 0
+        val len = target.length
+        while (i < len) {
+            if (target[i].isWhitespace()) {
+                while (i < len && target[i].isWhitespace()) {
+                    i++
+                }
+                if (i < len && target.startsWith(query, i)) {
+                    return true
+                }
+            } else {
+                i++
+            }
+        }
+        return false
+    }
 
     /**
      * Scores an AppListItem based on its activity label.
@@ -61,11 +133,6 @@ object FuzzyFinder {
         val m = haystack.length
         if (n > m) return 0f
 
-        val scoreMatch = 100
-        val scoreConsecutive = 90
-        val scoreWordStart = 80
-        val scoreStartIdxBonus = 15
-
         var currentScore = 0
         var needleIdx = 0
         var prevHaystackIdx = -1
@@ -73,16 +140,15 @@ object FuzzyFinder {
         // 1. Actual Score Loop
         for (i in 0 until m) {
             if (needleIdx >= n) break
-            if (haystack[i] == needle[needleIdx]) {
-                var charScore = scoreMatch
-                if (prevHaystackIdx != -1 && i == prevHaystackIdx + 1) charScore += scoreConsecutive
+            if (m - i < n - needleIdx) break
 
-                val isWordStart = if (i == 0) true else {
-                    val prevChar = haystack[i - 1]
-                    prevChar == ' ' || prevChar == '.' || prevChar == '_' || prevChar == '-' || prevChar == ','
-                }
-                if (isWordStart) charScore += scoreWordStart
-                if (i < 3) charScore += scoreStartIdxBonus
+            if (haystack[i] == needle[needleIdx]) {
+                var charScore = SCORE_MATCH
+                if (prevHaystackIdx != -1 && i == prevHaystackIdx + 1) charScore += SCORE_CONSECUTIVE
+
+                val isWordStart = i == 0 || isWordBoundary(haystack[i - 1])
+                if (isWordStart) charScore += SCORE_WORD_START
+                if (i < 3) charScore += SCORE_START_IDX_BONUS
 
                 currentScore += charScore
                 prevHaystackIdx = i
@@ -94,20 +160,20 @@ object FuzzyFinder {
 
         // 2. Corrected Perfect Max Score
         // We only calculate the potential score for characters that ARE NOT spaces.
-        var perfectMaxScore = 0
-        for (i in 0 until m) {
-            if (haystack[i] == ' ') continue // <--- SKIP spaces in the denominator!
+        val perfectMaxScore = maxScoreCache.getOrPut(haystack) {
+            var maxScore = 0
+            for (i in 0 until m) {
+                if (haystack[i] == ' ') continue
 
-            var potential = scoreMatch
-            val isWordStart = if (i == 0) true else {
-                val prevChar = haystack[i - 1]
-                prevChar == ' ' || prevChar == '.' || prevChar == '_' || prevChar == '-' || prevChar == ','
+                var potential = SCORE_MATCH
+                val isWordStart = i == 0 || isWordBoundary(haystack[i - 1])
+
+                potential += if (isWordStart) SCORE_WORD_START else SCORE_CONSECUTIVE
+                if (i < 3) potential += SCORE_START_IDX_BONUS
+
+                maxScore += potential
             }
-
-            potential += if (isWordStart) scoreWordStart else scoreConsecutive
-            if (i < 3) potential += scoreStartIdxBonus
-
-            perfectMaxScore += potential
+            maxScore
         }
 
         return if (perfectMaxScore == 0) 0f else currentScore.toFloat() / perfectMaxScore
@@ -123,30 +189,34 @@ object FuzzyFinder {
     }
 
     // --- Normalization Helpers ---
-    private fun normalizeString(input: String): String {
-        return normalizeDiacritics(input.uppercase(Locale.getDefault()))
-            .replace(Regex("[-_+,. ]"), emptyString())
-    }
+    private fun normalizeString(input: String): String = normalizeSearch(input)
 
-    private fun normalizeSearch(input: String): String {
-        return normalizeDiacritics(input.uppercase(Locale.getDefault()))
-            .replace(Regex("[-_+,. ]"), emptyString())
-    }
+    private fun normalizeSearch(input: String): String =
+        searchCache.getOrPut(input) {
+            normalizeDiacritics(input.uppercase(Locale.getDefault()))
+                .replace(PUNCT_SPACE_REGEX, emptyString())
+        }
 
-    private fun normalizeTarget(input: String): String {
-        return normalizeDiacritics(input.uppercase(Locale.getDefault()))
-            .replace(Regex("[-_+,.]"), " ") // Keep spaces to detect word boundaries
-    }
+    private fun normalizeTarget(input: String): String = getTargetData(input).normalized
 
     private fun normalizeDiacritics(input: String): String {
         return Normalizer.normalize(input, Normalizer.Form.NFD)
-            .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), emptyString())
+            .replace(DIACRITICS_REGEX, emptyString())
     }
 
     /**
      * A generic helper to filter lists based on fuzzy scoring or simple matching.
      * T is the type of item (AppListItem or ContactListItem)
      */
+    private data class RankedItem<T>(
+        val item: T,
+        val score: Int,
+        val startIndex: Int,
+        val startsWith: Boolean,
+        val wordStartsWith: Boolean,
+        val originalIndex: Int
+    )
+
     fun <T> filterItems(
         itemsList: List<T>,
         query: String,
@@ -160,28 +230,17 @@ object FuzzyFinder {
         val normalizedQuery = normalizeSearch(query)
 
         // Keep original index as a final tie-breaker to preserve deterministic ordering.
-        data class RankedItem<T>(
-            val item: T,
-            val score: Int,
-            val startIndex: Int,
-            val startsWith: Boolean,
-            val wordStartsWith: Boolean,
-            val originalIndex: Int
-        )
-
         val rankedMatches = itemsList.mapIndexedNotNull { index, item ->
             val label = labelProvider(item)
-            val normalizedTarget = normalizeTarget(label)
-            val normalizedTargetCompact = normalizedTarget.replace(" ", emptyString())
+            val targetData = getTargetData(label)
+            val normalizedTarget = targetData.normalized
+            val normalizedTargetCompact = targetData.compact
             val startIndex = normalizedTargetCompact.indexOf(normalizedQuery)
             val startsWith = normalizedTargetCompact.startsWith(normalizedQuery)
-            val wordStartsWith = normalizedTarget
-                .split(Regex("\\s+"))
-                .any { it.startsWith(normalizedQuery) }
+            val wordStartsWith = hasWordStartingWith(normalizedTarget, normalizedQuery)
 
             if (prefs.enableFilterStrength) {
                 val score = scoreProvider(item, query)
-                AppLogger.d(loggerTag, "item: $label | score: $score")
                 val blockedByStartSetting = prefs.searchFromStart && !startsWith
                 if (score <= prefs.filterStrength || blockedByStartSetting) {
                     null
@@ -189,7 +248,7 @@ object FuzzyFinder {
                     RankedItem(item, score, startIndex, startsWith, wordStartsWith, index)
                 }
             } else {
-                val targetLower = label.lowercase()
+                val targetLower = targetData.lower
                 val matched = if (prefs.searchFromStart) {
                     targetLower.startsWith(query)
                 } else {

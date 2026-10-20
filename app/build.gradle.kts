@@ -82,21 +82,23 @@ extensions.configure<ApplicationExtension>("android") {
         }
     }
 
-    signingConfigs {
-        create("release") {
-            val keystoreFile = rootProject.file("app/mLauncher.jks")
+    val keystoreFile = rootProject.file("app/mLauncher.jks")
+    val keyStorePassword = System.getenv("KEY_STORE_PASSWORD")
+        ?: project.findProperty("KEY_STORE_PASSWORD") as String?
 
-            println("Using keystore: ${keystoreFile.absolutePath} (${keystoreFile.length()} bytes)")
+    if (!keyStorePassword.isNullOrBlank() && keystoreFile.exists()) {
+        signingConfigs {
+            create("release") {
+                fun required(name: String): String =
+                    System.getenv(name)
+                        ?: project.findProperty(name) as String?
+                        ?: error("Missing required environment variable: $name")
 
-            fun required(name: String): String =
-                System.getenv(name)
-                    ?: project.findProperty(name) as String?
-                    ?: error("Missing required environment variable: $name")
-
-            storeFile = keystoreFile
-            storePassword = required("KEY_STORE_PASSWORD")
-            keyAlias = required("KEY_ALIAS")
-            keyPassword = required("KEY_PASSWORD")
+                storeFile = keystoreFile
+                storePassword = keyStorePassword
+                keyAlias = required("KEY_ALIAS")
+                keyPassword = required("KEY_PASSWORD")
+            }
         }
     }
 
@@ -120,7 +122,7 @@ extensions.configure<ApplicationExtension>("android") {
                 "proguard-rules.pro"
             )
 
-            signingConfig = signingConfigs["release"]
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
 
             resValue("string", "app_version", baseVersionName)
             resValue("string", "empty", "")

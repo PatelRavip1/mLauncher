@@ -27,7 +27,9 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.github.codeworkscreativehub.mlauncher.helper.utils.AppDiffCallback
 import com.github.codeworkscreativehub.common.AppLogger
 import com.github.codeworkscreativehub.common.getLocalizedString
 import com.github.codeworkscreativehub.common.isSystemApp
@@ -67,7 +69,7 @@ class AppDrawerAdapter(
     private val appInfoListener: (AppListItem) -> Unit
 ) : RecyclerView.Adapter<AppDrawerAdapter.ViewHolder>(), Filterable {
 
-    private lateinit var prefs: Prefs
+    private val prefs: Prefs = Prefs(context)
     private var appFilter = createAppFilter()
     private var openedContextMenuPosition = RecyclerView.NO_POSITION
     var appsList: MutableList<AppListItem> = mutableListOf()
@@ -83,7 +85,6 @@ class AppDrawerAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         binding = AdapterAppDrawerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        prefs = Prefs(parent.context)
         biometricHelper = BiometricHelper(fragment.requireActivity())
         val fontColor = prefs.appColor
         binding.appTitle.setTextColor(fontColor)
@@ -101,25 +102,26 @@ class AppDrawerAdapter(
     @SuppressLint("RecyclerView")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         if (appFilteredList.isEmpty() || position !in appFilteredList.indices) {
-            AppLogger.d("AppListDebug", "⚠️ onBindViewHolder called but appFilteredList is empty or position out of bounds")
             return
         }
 
-        val appModel = appFilteredList[holder.absoluteAdapterPosition]
-        AppLogger.d("AppListDebug", "🔧 Binding position=$position, label=${appModel.activityLabel}, package=${appModel.activityPackage}")
+        val appModel = appFilteredList[position]
 
         // Pass icon cache and loading scope to bind
         holder.bind(flag, gravity, appModel, appClickListener, appInfoListener, appDeleteListener, iconCache, iconLoadingScope, prefs)
 
         holder.appHide.setOnClickListener {
-            AppLogger.d("AppListDebug", "❌ Hide clicked for ${appModel.activityLabel} (${appModel.activityPackage})")
+            val pos = holder.bindingAdapterPosition
+            if (pos == RecyclerView.NO_POSITION || pos !in appFilteredList.indices) return@setOnClickListener
+            val itemToHide = appFilteredList[pos]
+            AppLogger.d("AppListDebug", "❌ Hide clicked for ${itemToHide.activityLabel} (${itemToHide.activityPackage})")
 
-            appFilteredList.removeAt(holder.absoluteAdapterPosition)
-            appsList.remove(appModel)
-            notifyItemRemoved(holder.absoluteAdapterPosition)
+            appFilteredList.removeAt(pos)
+            appsList.remove(itemToHide)
+            notifyItemRemoved(pos)
 
-            AppLogger.d("AppListDebug", "📤 notifyItemRemoved at ${holder.absoluteAdapterPosition}")
-            appHideListener(flag, appModel)
+            AppLogger.d("AppListDebug", "📤 notifyItemRemoved at $pos")
+            appHideListener(flag, itemToHide)
         }
 
         holder.appLock.setOnClickListener {
@@ -162,38 +164,46 @@ class AppDrawerAdapter(
         }
 
         holder.appSaveRename.setOnClickListener {
+            val pos = holder.bindingAdapterPosition
+            if (pos == RecyclerView.NO_POSITION || pos !in appFilteredList.indices) return@setOnClickListener
+            val item = appFilteredList[pos]
             val currentText = holder.appRenameEdit.text.toString().trim()
 
             when {
                 currentText.isEmpty() -> { // Reset state
-                    AppLogger.d("AppListDebug", "✏️ Resetting ${appModel.activityPackage} to default")
-                    appRenameListener(appModel.settingsKey, emptyString()) // empty string = default
+                    AppLogger.d("AppListDebug", "✏️ Resetting ${item.activityPackage} to default")
+                    appRenameListener(item.settingsKey, emptyString()) // empty string = default
                 }
 
-                currentText != prefs.getAppAlias(appModel.settingsKey) -> { // Rename state
-                    AppLogger.d("AppListDebug", "✏️ Renaming ${appModel.settingsKey} to $currentText")
-                    appRenameListener(appModel.settingsKey, currentText)
+                currentText != prefs.getAppAlias(item.settingsKey) -> { // Rename state
+                    AppLogger.d("AppListDebug", "✏️ Renaming ${item.settingsKey} to $currentText")
+                    appRenameListener(item.settingsKey, currentText)
                 }
             }
 
-            notifyItemChanged(holder.absoluteAdapterPosition)
-            AppLogger.d("AppListDebug", "🔁 notifyItemChanged at ${holder.absoluteAdapterPosition}")
+            notifyItemChanged(pos)
+            AppLogger.d("AppListDebug", "🔁 notifyItemChanged at $pos")
         }
 
         holder.appSaveCancel.setOnClickListener {
+            val pos = holder.bindingAdapterPosition
+            if (pos == RecyclerView.NO_POSITION || pos !in appFilteredList.indices) return@setOnClickListener
             AppLogger.d("AppListDebug", "✏️ Cancel rename for ${appModel.activityPackage}")
 
-            notifyItemChanged(holder.absoluteAdapterPosition)
-            AppLogger.d("AppListDebug", "🔁 notifyItemChanged at ${holder.absoluteAdapterPosition}")
+            notifyItemChanged(pos)
+            AppLogger.d("AppListDebug", "🔁 notifyItemChanged at $pos")
         }
 
         holder.appSaveTag.setOnClickListener {
+            val pos = holder.bindingAdapterPosition
+            if (pos == RecyclerView.NO_POSITION || pos !in appFilteredList.indices) return@setOnClickListener
+            val item = appFilteredList[pos]
             val name = holder.appTagEdit.text.toString().trim()
-            AppLogger.d("AppListDebug", "✏️ Tagging ${appModel.activityPackage} to $name")
-            appModel.customTag = name
-            notifyItemChanged(holder.absoluteAdapterPosition)
-            AppLogger.d("AppListDebug", "🔁 notifyItemChanged at ${holder.absoluteAdapterPosition}")
-            appTagListener(appModel.settingsKey, appModel.customTag, appModel.user)
+            AppLogger.d("AppListDebug", "✏️ Tagging ${item.activityPackage} to $name")
+            item.customTag = name
+            notifyItemChanged(pos)
+            AppLogger.d("AppListDebug", "🔁 notifyItemChanged at $pos")
+            appTagListener(item.settingsKey, item.customTag, item.user)
         }
 
         autoLaunch(position)
@@ -213,7 +223,7 @@ class AppDrawerAdapter(
                 val filtered = filterItems(
                     itemsList = appsList,
                     query = query,
-                    prefs = Prefs(context),
+                    prefs = prefs,
                     scoreProvider = { app, q ->
                         if (isTagSearch) FuzzyFinder.scoreString(app.tag, q, Constants.MAX_FILTER_STRENGTH)
                         else FuzzyFinder.scoreApp(context, app, q, Constants.MAX_FILTER_STRENGTH)
@@ -230,14 +240,15 @@ class AppDrawerAdapter(
             }
 
 
-            @SuppressLint("NotifyDataSetChanged")
             @Suppress("UNCHECKED_CAST")
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                if (results?.values is MutableList<*>) {
-                    appFilteredList = results.values as MutableList<AppListItem>
-                    notifyDataSetChanged()
-                } else {
-                    return
+                val newFiltered = (results?.values as? MutableList<AppListItem>) ?: return
+                val oldList = appFilteredList.toList()
+                appFilteredList = newFiltered
+                val diffResult = DiffUtil.calculateDiff(AppDiffCallback(oldList, newFiltered))
+                diffResult.dispatchUpdatesTo(this@AppDrawerAdapter)
+                if (newFiltered.size == 1) {
+                    autoLaunch(0)
                 }
             }
         }
@@ -256,11 +267,12 @@ class AppDrawerAdapter(
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun setAppList(appsList: MutableList<AppListItem>) {
+        val oldList = this.appFilteredList.toList()
         this.appsList = appsList
         this.appFilteredList = appsList
-        notifyDataSetChanged()
+        val diffResult = DiffUtil.calculateDiff(AppDiffCallback(oldList, appsList))
+        diffResult.dispatchUpdatesTo(this)
     }
 
     fun launchFirstInList() {
