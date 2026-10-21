@@ -115,7 +115,7 @@
                         android:layout_marginTop="2dp"
                         android:layout_marginBottom="8dp"
                         android:textSize="12sp"
-                        tools:text="● ● ● ● ● ● ● ● ● ● ● ●" />
+                        tools:text="● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●" />
 
                     <com.github.codeworkscreativehub.mlauncher.ui.components.WeekDashesView
                         android:id="@+id/weekDashesView"

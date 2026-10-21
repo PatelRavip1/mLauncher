@@ -383,7 +383,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     ) {
         val activeColor = prefs.dateColor
         val trackColor = ColorUtils.setAlphaComponent(prefs.dateColor, 51)
-        val dayFilledDots = (elapsedSeconds / 7200).coerceIn(0, 12)
+        val dayFilledDots = (elapsedSeconds / 3600).coerceIn(0, 24)
         val yearFilledDots = (((dayOfYear - 1) * 52) / totalDays).coerceIn(0, 52)
 
         fun renderDots(totalDots: Int, filledCount: Int, rowLength: Int = 12): SpannableStringBuilder {
@@ -419,7 +419,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         )
         val yearDotsPerRow = ((availableWidth + spaceWidth) / (dotWidth + spaceWidth)).toInt().coerceIn(12, 52)
 
-        binding.dayDotsView.text = renderDots(12, dayFilledDots, 12)
+        binding.dayDotsView.text = renderDots(24, dayFilledDots, 24)
         binding.yearDotsView.text = renderDots(52, yearFilledDots, yearDotsPerRow)
     }
 
