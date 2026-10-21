@@ -408,6 +408,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             val scale = availableWidth.toFloat() / measuredDayWidth
             binding.dayDotsView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, binding.dayDotsView.textSize * scale)
         }
+        val measuredYearWidth = binding.yearDotsView.paint.measureText(renderDots(26, 0, 26).toString())
+        if (measuredYearWidth > availableWidth && availableWidth > 0) {
+            val scale = availableWidth.toFloat() / measuredYearWidth
+            binding.yearDotsView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, binding.yearDotsView.textSize * scale)
+        }
         val dayOfWeek = now.get(Calendar.DAY_OF_WEEK)
         val firstDayOfWeek = now.firstDayOfWeek
         val weekDayIndex = (dayOfWeek - firstDayOfWeek + 7) % 7 + 1 // 1..7
@@ -422,10 +427,9 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             dashGap = spaceWidth,
             alignGravity = viewModel.dateAlignment.value?.value() ?: Gravity.START
         )
-        val yearDotsPerRow = ((availableWidth + spaceWidth) / (dotWidth + spaceWidth)).toInt().coerceIn(12, 52)
 
         binding.dayDotsView.text = renderDots(24, dayFilledDots, 24)
-        binding.yearDotsView.text = renderDots(52, yearFilledDots, yearDotsPerRow)
+        binding.yearDotsView.text = renderDots(52, yearFilledDots, 26)
     }
 
 
