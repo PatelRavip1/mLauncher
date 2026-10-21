@@ -117,6 +117,13 @@
                         android:textSize="12sp"
                         tools:text="● ● ● ● ● ● ● ● ● ● ● ●" />
 
+                    <com.github.codeworkscreativehub.mlauncher.ui.components.WeekDashesView
+                        android:id="@+id/weekDashesView"
+                        android:layout_width="match_parent"
+                        android:layout_height="5dp"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="8dp" />
+
                     <!-- Year in Progress -->
                     <LinearLayout
                         android:id="@+id/yearProgressHeader"

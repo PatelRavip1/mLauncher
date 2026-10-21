@@ -403,8 +403,20 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         val availableWidth = binding.yearDotsView.width.takeIf { it > 0 }
             ?: binding.progressBarsLayout.width.takeIf { it > 0 }
             ?: (resources.displayMetrics.widthPixels - (resources.displayMetrics.density * 44).toInt())
-        val dotWidth = binding.yearDotsView.paint.measureText("●")
-        val spaceWidth = binding.yearDotsView.paint.measureText(" ")
+        val dayOfWeek = now.get(Calendar.DAY_OF_WEEK)
+        val firstDayOfWeek = now.firstDayOfWeek
+        val weekDayIndex = (dayOfWeek - firstDayOfWeek + 7) % 7 + 1 // 1..7
+        val dotWidth = binding.dayDotsView.paint.measureText("●")
+        val spaceWidth = binding.dayDotsView.paint.measureText(" ")
+        val twoDotsLength = 2 * dotWidth + spaceWidth
+        binding.weekDashesView.setProgress(
+            filled = weekDayIndex,
+            active = activeColor,
+            track = trackColor,
+            dashWidth = twoDotsLength,
+            dashGap = spaceWidth,
+            alignGravity = viewModel.dateAlignment.value?.value() ?: Gravity.START
+        )
         val yearDotsPerRow = ((availableWidth + spaceWidth) / (dotWidth + spaceWidth)).toInt().coerceIn(12, 52)
 
         binding.dayDotsView.text = renderDots(12, dayFilledDots, 12)
@@ -639,6 +651,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 (binding.yearDotsView.layoutParams as? LinearLayout.LayoutParams)?.let {
                     it.gravity = dateGravity.value()
                     binding.yearDotsView.layoutParams = it
+                }
+                binding.weekDashesView.alignGravity = dateGravity.value()
+                (binding.weekDashesView.layoutParams as? LinearLayout.LayoutParams)?.let {
+                    it.gravity = dateGravity.value()
+                    binding.weekDashesView.layoutParams = it
                 }
             }
 
