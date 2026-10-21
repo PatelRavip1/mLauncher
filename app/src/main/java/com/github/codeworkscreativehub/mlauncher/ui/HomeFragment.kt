@@ -403,6 +403,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         val availableWidth = binding.yearDotsView.width.takeIf { it > 0 }
             ?: binding.progressBarsLayout.width.takeIf { it > 0 }
             ?: (resources.displayMetrics.widthPixels - (resources.displayMetrics.density * 44).toInt())
+        val measuredDayWidth = binding.dayDotsView.paint.measureText(renderDots(24, dayFilledDots, 24).toString())
+        if (measuredDayWidth > availableWidth && availableWidth > 0) {
+            val scale = availableWidth.toFloat() / measuredDayWidth
+            binding.dayDotsView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, binding.dayDotsView.textSize * scale)
+        }
         val dayOfWeek = now.get(Calendar.DAY_OF_WEEK)
         val firstDayOfWeek = now.firstDayOfWeek
         val weekDayIndex = (dayOfWeek - firstDayOfWeek + 7) % 7 + 1 // 1..7
